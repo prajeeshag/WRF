@@ -557,6 +557,8 @@ MODULE module_wrf_quilt
 
 logical okay_to_w
 character*120 sysline
+     
+      if (compute_node) return
 
       dom_id = 1 ! always a valid assumption for domain id for this netcdf setting
       CALL model_to_grid_config_rec ( dom_id , model_config_rec , config_flags )
@@ -2694,7 +2696,9 @@ okay_to_w = .false.
 #  if ( DA_CORE != 1 )
           IF (coupler_on) CALL cpl_set_dm_communicator( MPI_COMM_NULL )
 #  endif
-          CALL quilt    ! will not return on io server tasks
+!          CALL quilt    ! will not return on io server tasks
+          ! Prajeesh: Return IO server tasks as well, will be called wrf
+          ! main after wrf_init
        ENDIF
 #endif
       RETURN

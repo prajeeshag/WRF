@@ -9,7 +9,7 @@ PROGRAM wrf
                               wrf_run_tl_standalone, wrf_run_ad_standalone
    USE module_state_description, only : dyn_em, dyn_em_tl, dyn_em_ad
 #endif
-
+  use module_wrf_quilt, only: quilt
 !<DESCRIPTION>
 ! Main program of WRF model.  Responsible for starting up the model, reading in (and
 ! broadcasting for distributed memory) configuration data, defining and initializing
@@ -28,7 +28,7 @@ PROGRAM wrf
 
   ! Set up WRF model.  
   CALL wrf_init
-
+  call quilt ! all compute tasks will be returned 
   ! Run digital filter initialization if requested.
   CALL wrf_dfi
 
@@ -41,6 +41,7 @@ PROGRAM wrf
 #if ( WRFPLUS == 1 )
   IF  ( config_flags%dyn_opt .EQ. dyn_em ) &
 #endif
+
   CALL wrf_run
 
 #if ( WRFPLUS == 1 )

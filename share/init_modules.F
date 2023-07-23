@@ -13,7 +13,7 @@ SUBROUTINE init_modules( phase )
  USE module_io_wrf              , ONLY : init_module_io_wrf
  USE module_io                  , ONLY : init_module_io
 #ifdef DM_PARALLEL
- USE module_wrf_quilt           , ONLY : init_module_wrf_quilt
+ USE module_wrf_quilt           , ONLY : init_module_wrf_quilt, compute_node
  USE module_dm                  , ONLY : init_module_dm, split_communicator,hwrf_coupler_init
 #else
  USE module_dm                  , ONLY : init_module_dm
@@ -85,11 +85,14 @@ IF ( phase == 1 ) THEN
 # else
  CALL split_communicator
  CALL init_module_wrf_quilt    !! this *must* be called before init_module_dm
+ if (.not. compute_node) return ! Prajeesh: io tasks should return here
 # endif
 
 #endif
  CALL init_module_dm
 ELSE
+ if (.not. compute_node) return ! Prajeesh: io tasks should return here
+                                ! in phase 2
  CALL init_module_wrf_error ! must be called after init_module_dm
 
  CALL init_module_nesting

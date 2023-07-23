@@ -50,6 +50,8 @@ MODULE module_wrf_top
 #endif
 
    USE module_cpl, ONLY : coupler_on, cpl_finalize, cpl_defdomain
+    
+    use module_wrf_quilt, only: compute_node
 
    IMPLICIT NONE
 
@@ -176,6 +178,7 @@ CONTAINS
    ! Initialize WRF modules:  
    ! Phase 1 returns after MPI_INIT() (if it is called)
    CALL init_modules(1)
+   if (.not. compute_node) return  
    IF ( .NOT. PRESENT( no_init1 ) ) THEN
      ! Initialize utilities (time manager, etc.)
 #ifdef NO_LEAP_CALENDAR
