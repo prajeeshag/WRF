@@ -5,7 +5,7 @@ MODULE module_integrate
 
 CONTAINS
 
-RECURSIVE SUBROUTINE integrate ( grid )
+RECURSIVE SUBROUTINE integrate ( grid, do_last_io )
 
 
 
@@ -32,7 +32,8 @@ RECURSIVE SUBROUTINE integrate ( grid )
 
    !  Input data.
 
-   TYPE(domain) , POINTER :: grid
+   TYPE(domain) , POINTER :: grid 
+   logical, optional, intent(in) :: do_last_io 
 
 ! module_integrate:integrate
 ! <DESCRIPTION> 
@@ -168,6 +169,9 @@ RECURSIVE SUBROUTINE integrate ( grid )
    INTEGER                                :: idum1 , idum2 , ierr , open_status
    LOGICAL                                :: should_do_last_io
    LOGICAL                                :: may_have_moved
+   
+   logical :: do_last_io_local = .true.
+
 #if ( WRFPLUS == 1 )
    INTEGER                                :: rc
    LOGICAL                                :: should_add_forcing
@@ -310,6 +314,10 @@ RECURSIVE SUBROUTINE integrate ( grid )
 
    END INTERFACE
 
+    do_last_io_local = .true.
+   if (present(do_last_io)) do_last_io_local = do_last_io 
+
+
    ! This allows us to reference the current grid from anywhere beneath 
    ! this point for debugging purposes.  
    CALL set_current_grid_ptr( grid )
@@ -430,7 +438,7 @@ ENDIF
                    CALL set_current_grid_ptr( grid_ptr%nests(kid)%ptr )
                    WRITE(message,*)grid%id,' module_integrate: recursive call to integrate '
                    CALL wrf_debug( 100 , message )
-                      CALL integrate ( grid_ptr%nests(kid)%ptr ) 
+                   CALL integrate ( grid_ptr%nests(kid)%ptr, do_last_io_local ) 
                    WRITE(message,*)grid%id,' module_integrate: back from recursive call to integrate '
                    CALL wrf_debug( 100 , message )
                  ENDIF
@@ -509,6 +517,7 @@ ENDIF ! active_this_task
 
          ! Avoid double writes on nests if this is not really the last time;
          ! Do check for write if the parent domain is ending.
+      if (do_last_io_local) then
          IF ( grid%id .EQ. 1 ) THEN               ! head_grid
             IF ( grid%active_this_task ) CALL med_last_solve_io ( grid , config_flags )
          ELSE
@@ -527,6 +536,7 @@ ENDIF ! active_this_task
                IF ( grid%active_this_task ) CALL med_last_solve_io ( grid , config_flags )
             ENDIF
          ENDIF
+      endif ! do_last_io_local
       ENDIF
    END IF
    CALL pop_communicators_for_domain

@@ -2011,10 +2011,11 @@ ENDIF
 !------------------AD/TL code end--------------------
 #endif
 
-   SUBROUTINE wrf_run( )
+   SUBROUTINE wrf_run(do_last_io)
 !<DESCRIPTION>
 !     WRF run routine.
 !</DESCRIPTION>
+      LOGICAL, OPTIONAL, intent(in) :: do_last_io
 
 #if (WRFPLUS == 1)
    integer :: io_auxh7, io_auxh8
@@ -2072,7 +2073,7 @@ ENDIF
    head_grid%itimestep = 0
    CALL start_domain ( head_grid , .TRUE. )
 #endif
-   CALL integrate ( head_grid )
+   CALL integrate ( head_grid, do_last_io )
 
 #if (WRFPLUS == 1)
    CALL nl_set_io_form_auxhist7( head_grid%id, io_auxh7 )
