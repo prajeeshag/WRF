@@ -51,6 +51,8 @@ MODULE module_wrf_top
 
    USE module_cpl, ONLY : coupler_on, cpl_finalize, cpl_defdomain
 
+   use module_wrf_quilt, only: compute_node
+
    IMPLICIT NONE
 
 #if ( WRFPLUS == 1 )
@@ -177,6 +179,7 @@ CONTAINS
    ! Initialize WRF modules:  
    ! Phase 1 returns after MPI_INIT() (if it is called)
    CALL init_modules(1)
+   if (.not. compute_node) return
    IF ( .NOT. PRESENT( no_init1 ) ) THEN
      ! Initialize utilities (time manager, etc.)
 #ifdef NO_LEAP_CALENDAR
@@ -2010,11 +2013,11 @@ ENDIF
 !------------------AD/TL code end--------------------
 #endif
 
-   SUBROUTINE wrf_run( )
+   SUBROUTINE wrf_run( do_last_io )
 !<DESCRIPTION>
 !     WRF run routine.
 !</DESCRIPTION>
-
+  logical, optional, intent(in) :: do_last_io
 #if (WRFPLUS == 1)
    integer :: io_auxh7, io_auxh8
    CHARACTER (LEN=80)      :: bdyname
@@ -2071,7 +2074,7 @@ ENDIF
    head_grid%itimestep = 0
    CALL start_domain ( head_grid , .TRUE. )
 #endif
-   CALL integrate ( head_grid )
+   CALL integrate ( head_grid, do_last_io )
 
 #if (WRFPLUS == 1)
    CALL nl_set_io_form_auxhist7( head_grid%id, io_auxh7 )
